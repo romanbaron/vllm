@@ -240,6 +240,10 @@ class Worker(WorkerBase):
         return self._sleep_mode_backend
 
     def sleep(self, level: int = 1) -> None:
+        loader = self.model_runner.model_loader
+        if loader is not None:
+            loader.on_sleep(level)
+
         torch.accelerator.synchronize()
         free_bytes_before_sleep = torch.accelerator.get_memory_info()[0]
 
@@ -299,6 +303,10 @@ class Worker(WorkerBase):
             self._sleep_saved_draft_buffers = {}
 
         self.synchronize_device()
+
+        loader = self.model_runner.model_loader
+        if loader is not None:
+            loader.on_wake_up(tags)
 
     def checkpoint_prepare(self) -> None:
         checkpoint_prepare_distributed_state()
@@ -520,6 +528,9 @@ class Worker(WorkerBase):
     def reload_weights(self, *args, **kwargs) -> None:
         with set_current_vllm_config(self.vllm_config):
             self.model_runner.reload_weights(*args, **kwargs)
+        loader = self.model_runner.model_loader
+        if loader is not None:
+            loader.on_weights_reloaded()
 
     @torch.inference_mode()
     def determine_available_memory(self) -> int:
