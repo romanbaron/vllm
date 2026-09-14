@@ -64,6 +64,15 @@ class ModelExpressModelLoader(BaseModelLoader):
     def on_weights_reloaded(self) -> None:
         self._loader.on_weights_reloaded()
 
+    def reload_model(
+        self,
+        vllm_config: VllmConfig,
+        model_config: ModelConfig,
+        model: nn.Module,
+        prefix: str = "",
+    ) -> nn.Module:
+        return self._loader.reload_model(vllm_config=vllm_config, model_config=model_config, model=model, prefix=prefix)
+
     @instrument(span_name="Load model")
     def load_model(
         self,
@@ -77,3 +86,18 @@ class ModelExpressModelLoader(BaseModelLoader):
             prefix=prefix,
         )
         return model.eval()
+
+    def get_all_weights(
+        self,
+        model_config: ModelConfig,
+        model: nn.Module,
+        vllm_config: VllmConfig,
+    ) -> Generator[tuple[str, torch.Tensor], None, None]:
+        model = self.reload_model(vllm_config, model_config, model)
+        return self.module_to_named_tensors(model)
+
+    def module_to_named_tensors(self, module: nn.Module) -> Generator[tuple[str, torch.Tensor], None, None]:
+        for name, tensor in module.named_parameters():
+            if tensor.is_meta:
+                continue
+            yield name, tensor

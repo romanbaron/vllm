@@ -5567,19 +5567,22 @@ class GPUModelRunner(
                 # so it must not be carried over to the new path.
                 self.model_config.model = weights_path
                 self.model_config.revision = None
-            weights_iterator = model_loader.get_all_weights(self.model_config, model)
+            weights_iterator = model_loader.get_all_weights(self.model_config, model, self.vllm_config)
             weights_iterator = cast(
                 Iterable[tuple[str, torch.Tensor]], weights_iterator
             )
 
         # begin loading weights
         logger.info_once("Reloading weights inplace...")
+        loaded_weights = set()
+        for name, tensor in weights_iterator:
+            loaded_weights.add(name)
         if is_checkpoint_format:
             # load weights from checkpoint/ original model format
-            initialize_layerwise_reload(model)
-            loaded_weights = model.load_weights(weights_iterator)
-            finalize_layerwise_reload(model, self.model_config)
-
+            #initialize_layerwise_reload(model)
+            #loaded_weights = model.load_weights(weights_iterator)
+            #finalize_layerwise_reload(model, self.model_config)
+            logger.info_once("ODEV: ISCHECKPOINT=True")
         else:
             # load weights from kernel format
             logger.warning_once(
