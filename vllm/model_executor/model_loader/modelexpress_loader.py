@@ -64,6 +64,15 @@ class ModelExpressModelLoader(BaseModelLoader):
     def on_weights_reloaded(self) -> None:
         self._loader.on_weights_reloaded()
 
+    def reload_model(
+        self,
+        vllm_config: VllmConfig,
+        model_config: ModelConfig,
+        model: nn.Module,
+        prefix: str = "",
+    ) -> nn.Module:
+        return self._loader.reload_model(vllm_config=vllm_config, model_config=model_config, model=model, prefix=prefix)
+
     @instrument(span_name="Load model")
     def load_model(
         self,
