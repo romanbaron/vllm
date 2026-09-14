@@ -5692,7 +5692,7 @@ class GPUModelRunner(
                 # so it must not be carried over to the new path.
                 self.model_config.model = weights_path
                 self.model_config.revision = None
-            weights_iterator = model_loader.get_all_weights(self.model_config, model, vllm_config)
+            weights_iterator = model_loader.get_all_weights(self.model_config, model, self.vllm_config)
             weights_iterator = cast(
                 Iterable[tuple[str, torch.Tensor]], weights_iterator
             )
