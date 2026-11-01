@@ -1145,14 +1145,16 @@ def test_reload_weights_path_replaces_object_storage_source(monkeypatch):
     # model_config.model. A new weights_path must replace it, or the loader
     # silently re-streams the original checkpoint.
     loader = Mock()
+    loader.reload_weights_inplace.return_value = False
     loader.get_all_weights.return_value = iter(())
     monkeypatch.setattr(reload_inplace_module, "get_model_loader", lambda _: loader)
-    monkeypatch.setattr(reload_inplace_module, "initialize_layerwise_reload", Mock())
-    monkeypatch.setattr(reload_inplace_module, "finalize_layerwise_reload", Mock())
+    monkeypatch.setattr(reload_inplace_module, "start_reload", Mock())
+    monkeypatch.setattr(reload_inplace_module, "finish_reload", Mock())
 
     vllm_config = SimpleNamespace(
         lora_config=None,
-        load_config=SimpleNamespace(load_format="runai_streamer"),
+        load_config=SimpleNamespace(load_format="runai_streamer", device=None),
+        device_config=SimpleNamespace(device="cpu"),
         model_config=SimpleNamespace(
             model="/tmp/pulled-config-files",
             model_weights="s3://bucket/original",
